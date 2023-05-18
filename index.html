@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather Forecast Website</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  
+  <h1>Weather Forecast</h1>
+  <form>
+    <label for="city">Enter City Name:</label>
+    <input type="text" id="city" name="city" required>
+    <button type="submit">Get Forecast</button>
+  </form>
+  <div id="current-weather"></div>
+  <canvas id="temperature-chart"></canvas>
+  <canvas id="humidity-chart"></canvas>
+  <canvas id="weather-chart"></canvas>
+  <script>
+    const apiKey = "8ae73772655e121a0f2121f9742f87b4";
+    const form = document.querySelector("form");
+    const currentWeather = document.querySelector("#current-weather");
+    const temperatureChart = document.querySelector("#temperature-chart");
+    const humidityChart = document.querySelector("#humidity-chart");
+    const weatherChart = document.querySelector("#weather-chart");
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const city = document.querySelector("#city").value;
+      axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`)
+        .then(response => {
+          const weatherData = response.data;
+          const weatherCondition = weatherData.weather[0].description;
+          const temperature = weatherData.main.temp;
+          const humidity = weatherData.main.humidity;
+          const windSpeed = weatherData.wind.speed;
+          const dateTime = new Date().toLocaleString();
+          currentWeather.innerHTML = `
+            <h2>Current Weather in ${city}</h2>
+            <p>Weather Condition: ${weatherCondition}</p>
+            <p>Temperature: ${temperature} &deg;C</p>
+            <p>Humidity: ${humidity} %</p>
+            <p>Wind Speed: ${windSpeed} mph</p>
+            <p>Date and Time: ${dateTime}</p>
+          `;
+          axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`)
+            .then(response => {
+              const forecastData = response.data;
+              const temperatureData = forecastData.list.map(item => item.main.temp);
+              const humidityData = forecastData.list.map(item => item.main.humidity);
+              const weatherData = forecastData.list.map(item => item.weather[0].description);
+              const labels = forecastData.list.map(item => new Date(item.dt * 1000).toLocaleDateString());
+              new Chart(temperatureChart, {
+                type: "line",
+                data: {
+                  labels: labels,
+                  datasets: [{
+                    label: "Temperature",
+                    data: temperatureData,
+                    backgroundColor: "rgba(255, 99, 132, 0.2)",
+                    borderColor: "rgba(255, 99, 132, 1)",
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    yAxes: [{
+                      ticks: {
+                        beginAtZero: true
+                      }
+                    }]
+                  }
+                }
+              });
+              new Chart(humidityChart, {
+                type: "bar",
+                data: {
+                  labels: labels,
+                  datasets: [{
+                    label: "Humidity",
+                    data: humidityData,
+                    backgroundColor: "rgba(54, 162, 235, 0.2)",
+                    borderColor: "rgba(54, 162                 , 235, 1)",
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    yAxes: [{
+                      ticks: {
+                        beginAtZero: true
+                      }
+                    }]
+                  }
+                }
+              });
+              new Chart(weatherChart, {
+                type: "polarArea",
+                data: {
+                  labels: labels,
+                  datasets: [{
+                    label: "Weather Conditions",
+                    data: weatherData,
+                    backgroundColor: [
+                      "rgba(255, 99, 132, 0.2)",
+                      "rgba(54, 162, 235, 0.2)",
+                      "rgba(255, 206, 86, 0.2)",
+                      "rgba(75, 192, 192, 0.2)",
+                      "rgba(153, 102, 255, 0.2)",
+                      "rgba(255, 159, 64, 0.2)"
+                    ],
+                    borderColor: [
+                      "rgba(255, 99, 132, 1)",
+                      "rgba(54, 162, 235, 1)",
+                      "rgba(255, 206, 86, 1)",
+                      "rgba(75, 192, 192, 1)",
+                      "rgba(153, 102, 255, 1)",
+                      "rgba(255, 159, 64, 1)"
+                    ],
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  scales: {
+                    yAxes: [{
+                      ticks: {
+                        beginAtZero: true
+                      }
+                    }]
+                  }
+                }
+              });
+            })
+            .catch(error => console.error(error));
+        })
+        .catch(error => console.error(error));
+    });
+</script>
+</body>
+</html>    
